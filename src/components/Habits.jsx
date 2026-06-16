@@ -39,6 +39,14 @@ export default function Habits() {
     setLoading(false)
   }
 
+  function getStatusClass(habit, value) {
+    if (value === undefined || !habit.goal_value) return ''
+    const isGood = habit.goal_direction === 'up'
+      ? value >= habit.goal_value
+      : value <= habit.goal_value
+    return isGood ? 'status-good' : 'status-bad'
+  }
+
   if (loading) return <p style={{ color: 'var(--text-secondary)' }}>Loading...</p>
 
   return (
@@ -53,7 +61,7 @@ export default function Habits() {
           return (
             <div
               key={habit.id}
-              className="habit-card"
+              className={`habit-card ${getStatusClass(habit, todayValue)}`}
               onClick={() => setActiveHabit(habit)}
             >
               <div className="habit-card-title">{habit.title}</div>

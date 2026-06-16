@@ -370,3 +370,19 @@ body {
   color: var(--text-secondary);
   margin-top: 6px;
 }
+
+.habit-card.status-good {
+  border-color: var(--green);
+}
+
+.habit-card.status-good .habit-card-value {
+  color: var(--green);
+}
+
+.habit-card.status-bad {
+  border-color: var(--red);
+}
+
+.habit-card.status-bad .habit-card-value {
+  color: var(--red);
+}
