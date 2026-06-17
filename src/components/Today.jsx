@@ -190,13 +190,14 @@ export default function Today() {
       )}
 
       {activeHabit && (
-        <HabitLogModal
-          habit={activeHabit}
-          existingValue={habitLogs[activeHabit.id]}
-          onClose={() => setActiveHabit(null)}
-          onSaved={() => { setActiveHabit(null); fetchAll() }}
-        />
-      )}
+  <HabitLogModal
+    habit={activeHabit}
+    existingValue={habitLogs[activeHabit.id]}
+    logDate={dateStr}
+    onClose={() => setActiveHabit(null)}
+    onSaved={() => { setActiveHabit(null); fetchAll() }}
+  />
+)}
     </div>
   )
 }

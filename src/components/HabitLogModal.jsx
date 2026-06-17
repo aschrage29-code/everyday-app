@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-export default function HabitLogModal({ habit, existingValue, onClose, onSaved }) {
+export default function HabitLogModal({ habit, existingValue, logDate, onClose, onSaved }) {
   const [value, setValue] = useState(existingValue !== undefined ? existingValue : '')
   const [saving, setSaving] = useState(false)
 
-  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
-
+  const todayStr = logDate || new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
   async function handleSave() {
     if (value === '') return
     setSaving(true)
