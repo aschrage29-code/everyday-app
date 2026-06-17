@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import HabitLogModal from './HabitLogModal'
+import HabitDetail from './HabitDetail'
 
 export default function Habits() {
   const [habits, setHabits] = useState([])
-  const [logs, setLogs] = useState({})
   const [allLogs, setAllLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeHabit, setActiveHabit] = useState(null)
-
-  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
 
   useEffect(() => {
     fetchHabits()
@@ -24,19 +21,6 @@ export default function Habits() {
     if (!habitError) {
       setHabits(habitData)
 
-      const { data: logData, error: logError } = await supabase
-        .from('habit_logs')
-        .select('*')
-        .eq('date', todayStr)
-
-      if (!logError) {
-        const logMap = {}
-        logData.forEach(log => {
-          logMap[log.item_id] = log.value
-        })
-        setLogs(logMap)
-      }
-
       const thirtyDaysAgo = new Date()
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
       const thirtyDaysAgoStr = thirtyDaysAgo.toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
@@ -45,25 +29,65 @@ export default function Habits() {
         .from('habit_logs')
         .select('*')
         .gte('date', thirtyDaysAgoStr)
+        .order('date', { ascending: true })
 
       if (!log30Error) setAllLogs(log30Data)
     }
     setLoading(false)
   }
 
-  function getStatusClass(habit, value) {
-    if (value === undefined || !habit.goal_value) return ''
-    const isGood = habit.goal_direction === 'up'
-      ? value >= habit.goal_value
-      : value <= habit.goal_value
-    return isGood ? 'status-good' : 'status-bad'
+  function getHabitLogs(habitId) {
+    return allLogs.filter(log => log.item_id === habitId)
   }
 
   function getAverage(habitId) {
-    const habitLogs30 = allLogs.filter(log => log.item_id === habitId)
-    if (habitLogs30.length === 0) return null
-    const sum = habitLogs30.reduce((acc, log) => acc + log.value, 0)
-    return (sum / habitLogs30.length).toFixed(1)
+    const logs = getHabitLogs(habitId)
+    if (logs.length === 0) return null
+    const sum = logs.reduce((acc, log) => acc + log.value, 0)
+    return (sum / logs.length).toFixed(1)
+  }
+
+  function getStreak(habit) {
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+    const logs = getHabitLogs(habit.id)
+    const sorted = [...logs].sort((a, b) => b.date.localeCompare(a.date))
+    const relevant = sorted.filter(l => l.date !== todayStr)
+
+    let streak = 0
+    let cursor = new Date()
+    cursor.setDate(cursor.getDate() - 1)
+
+    for (let log of relevant) {
+  const cursorStr = cursor.toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+  if (log.date !== cursorStr) break
+  if (log.value <= 0) break
+  streak++
+  cursor.setDate(cursor.getDate() - 1)
+}
+
+    return streak
+  }
+
+  function renderSparkline(habitId) {
+    const logs = getHabitLogs(habitId)
+    if (logs.length < 2) return null
+
+    const maxValue = Math.max(...logs.map(l => l.value), 1)
+    const width = 100
+    const height = 30
+    const stepX = width / (logs.length - 1)
+
+    const points = logs.map((log, i) => {
+      const x = i * stepX
+      const y = height - (log.value / maxValue) * height
+      return `${x},${y}`
+    }).join(' ')
+
+    return (
+      <svg className="card-sparkline" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+        <polyline points={points} fill="none" stroke="var(--accent)" strokeWidth="2" />
+      </svg>
+    )
   }
 
   if (loading) return <p style={{ color: 'var(--text-secondary)' }}>Loading...</p>
@@ -75,40 +99,34 @@ export default function Habits() {
       )}
 
       <div className="habit-grid">
-        {habits.map(habit => {
-          const todayValue = logs[habit.id]
-          return (
-            <div
-              key={habit.id}
-              className={`habit-card ${getStatusClass(habit, todayValue)}`}
-              onClick={() => setActiveHabit(habit)}
-            >
-              <div className="habit-card-title">{habit.title}</div>
-              <div className="habit-card-value">
-                {todayValue !== undefined ? todayValue : '—'}
-                <span className="habit-card-unit">{habit.goal_unit}</span>
-              </div>
-              {habit.goal_value && (
-                <div className="habit-card-goal">
-                  Goal: {habit.goal_value} {habit.goal_unit}
-                </div>
-              )}
-              {getAverage(habit.id) && (
-                <div className="habit-card-avg">
-                  30-day avg: {getAverage(habit.id)} {habit.goal_unit}
-                </div>
-              )}
+        {habits.map(habit => (
+          <div
+            key={habit.id}
+            className="habit-card"
+            onClick={() => setActiveHabit(habit)}
+          >
+            <div className="habit-card-title">{habit.title}</div>
+            <div className="habit-card-value">
+              {getAverage(habit.id) || '—'}
+              <span className="habit-card-unit">{habit.goal_unit}</span>
             </div>
-          )
-        })}
+            {habit.goal_value && (
+              <div className="habit-card-goal">
+                Goal: {habit.goal_value} {habit.goal_unit}
+              </div>
+            )}
+            <div className="habit-card-bottom">
+              <span className="habit-card-streak">🔥 {getStreak(habit)}</span>
+              {renderSparkline(habit.id)}
+            </div>
+          </div>
+        ))}
       </div>
 
       {activeHabit && (
-        <HabitLogModal
+        <HabitDetail
           habit={activeHabit}
-          existingValue={logs[activeHabit.id]}
           onClose={() => setActiveHabit(null)}
-          onSaved={() => { setActiveHabit(null); fetchHabits() }}
         />
       )}
     </div>

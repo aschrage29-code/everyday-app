@@ -457,3 +457,71 @@ body {
   opacity: 0.3;
   cursor: default;
 }
+
+.detail-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.detail-stat {
+  flex: 1;
+  text-align: center;
+  background: var(--bg-elevated);
+  border-radius: 12px;
+  padding: 12px 8px;
+}
+
+.detail-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.detail-stat-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.sparkline {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 80px;
+  padding-top: 12px;
+}
+
+.sparkline-bar {
+  flex: 1;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+}
+
+.sparkline-bar.good {
+  background: var(--green);
+}
+
+.sparkline-bar.bad {
+  background: var(--red);
+}
+
+.habit-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.habit-card-streak {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.card-sparkline {
+  width: 60px;
+  height: 24px;
+  flex-shrink: 0;
+}
