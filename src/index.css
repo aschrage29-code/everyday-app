@@ -434,3 +434,26 @@ body {
 .task-card.status-bad .task-habit-value {
   color: var(--red);
 }
+
+.habit-card-avg {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.jump-today-btn-inline {
+  background: var(--bg-elevated);
+  color: var(--accent);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.jump-today-btn-inline.disabled {
+  opacity: 0.3;
+  cursor: default;
+}

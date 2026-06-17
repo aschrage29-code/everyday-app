@@ -5,6 +5,7 @@ import HabitLogModal from './HabitLogModal'
 export default function Habits() {
   const [habits, setHabits] = useState([])
   const [logs, setLogs] = useState({})
+  const [allLogs, setAllLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeHabit, setActiveHabit] = useState(null)
 
@@ -35,6 +36,17 @@ export default function Habits() {
         })
         setLogs(logMap)
       }
+
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      const thirtyDaysAgoStr = thirtyDaysAgo.toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+
+      const { data: log30Data, error: log30Error } = await supabase
+        .from('habit_logs')
+        .select('*')
+        .gte('date', thirtyDaysAgoStr)
+
+      if (!log30Error) setAllLogs(log30Data)
     }
     setLoading(false)
   }
@@ -45,6 +57,13 @@ export default function Habits() {
       ? value >= habit.goal_value
       : value <= habit.goal_value
     return isGood ? 'status-good' : 'status-bad'
+  }
+
+  function getAverage(habitId) {
+    const habitLogs30 = allLogs.filter(log => log.item_id === habitId)
+    if (habitLogs30.length === 0) return null
+    const sum = habitLogs30.reduce((acc, log) => acc + log.value, 0)
+    return (sum / habitLogs30.length).toFixed(1)
   }
 
   if (loading) return <p style={{ color: 'var(--text-secondary)' }}>Loading...</p>
@@ -72,6 +91,11 @@ export default function Habits() {
               {habit.goal_value && (
                 <div className="habit-card-goal">
                   Goal: {habit.goal_value} {habit.goal_unit}
+                </div>
+              )}
+              {getAverage(habit.id) && (
+                <div className="habit-card-avg">
+                  30-day avg: {getAverage(habit.id)} {habit.goal_unit}
                 </div>
               )}
             </div>
