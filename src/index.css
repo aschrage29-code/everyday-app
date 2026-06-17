@@ -386,3 +386,51 @@ body {
 .habit-card.status-bad .habit-card-value {
   color: var(--red);
 }
+
+.date-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.date-nav button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px 12px;
+}
+
+.date-nav-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 140px;
+  text-align: center;
+}
+
+.task-habit-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding-left: 8px;
+}
+
+.task-card.status-good {
+  border-color: var(--green);
+}
+
+.task-card.status-good .task-habit-value {
+  color: var(--green);
+}
+
+.task-card.status-bad {
+  border-color: var(--red);
+}
+
+.task-card.status-bad .task-habit-value {
+  color: var(--red);
+}
