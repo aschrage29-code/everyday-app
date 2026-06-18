@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import HabitDetail from './HabitDetail'
+import NewItemModal from './NewItemModal'
 
 export default function Habits() {
   const [habits, setHabits] = useState([])
   const [allLogs, setAllLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeHabit, setActiveHabit] = useState(null)
+  const [editingHabit, setEditingHabit] = useState(null)
 
   useEffect(() => {
     fetchHabits()
@@ -17,6 +19,7 @@ export default function Habits() {
       .from('items')
       .select('*')
       .eq('is_habit', true)
+      .eq('archived', false)
 
     if (!habitError) {
       setHabits(habitData)
@@ -40,19 +43,19 @@ export default function Habits() {
     return allLogs.filter(log => log.item_id === habitId)
   }
 
-function getGoalStatus(habitId) {
-  const habit = habits.find(h => h.id === habitId)
-  const avg = getAverage(habitId)
-  if (avg === null || !habit.goal_value) return null
-  const avgNum = parseFloat(avg)
-  const isGood = habit.goal_direction === 'up'
-    ? avgNum >= habit.goal_value
-    : avgNum <= habit.goal_value
-  const diff = habit.goal_direction === 'up'
-    ? avgNum - habit.goal_value
-    : habit.goal_value - avgNum
-  return { isGood, diff: diff.toFixed(1) }
-}
+  function getGoalStatus(habitId) {
+    const habit = habits.find(h => h.id === habitId)
+    const avg = getAverage(habitId)
+    if (avg === null || !habit.goal_value) return null
+    const avgNum = parseFloat(avg)
+    const isGood = habit.goal_direction === 'up'
+      ? avgNum >= habit.goal_value
+      : avgNum <= habit.goal_value
+    const diff = habit.goal_direction === 'up'
+      ? avgNum - habit.goal_value
+      : habit.goal_value - avgNum
+    return { isGood, diff: diff.toFixed(1) }
+  }
 
   function getAverage(habitId) {
     const logs = getHabitLogs(habitId)
@@ -119,7 +122,9 @@ function getGoalStatus(habitId) {
             className="habit-card"
             onClick={() => setActiveHabit(habit)}
           >
-            <div className="habit-card-title">{habit.title}</div>
+            <div className="habit-card-title">
+              {habit.emoji ? `${habit.emoji} ${habit.title}` : habit.title}
+            </div>
             <div className="habit-card-value">
               {getAverage(habit.id) || '—'}
               <span className="habit-card-unit">{habit.goal_unit}</span>
@@ -129,7 +134,7 @@ function getGoalStatus(habitId) {
                 Goal: {habit.goal_value} {habit.goal_unit}
               </div>
             )}
-           <div className="habit-card-bottom">
+            <div className="habit-card-bottom">
               {getGoalStatus(habit.id) !== null && (
                 <span className={`habit-card-status ${getGoalStatus(habit.id).isGood ? 'good' : 'bad'}`}>
                   {getGoalStatus(habit.id).isGood ? '✓' : '✗'} {getGoalStatus(habit.id).diff > 0 ? '+' : ''}{getGoalStatus(habit.id).diff}
@@ -146,6 +151,18 @@ function getGoalStatus(habitId) {
         <HabitDetail
           habit={activeHabit}
           onClose={() => setActiveHabit(null)}
+          onEdit={(habit) => {
+            setEditingHabit(habit)
+            setActiveHabit(null)
+          }}
+        />
+      )}
+
+      {editingHabit && (
+        <NewItemModal
+          editItem={editingHabit}
+          onClose={() => setEditingHabit(null)}
+          onSaved={fetchHabits}
         />
       )}
     </div>
