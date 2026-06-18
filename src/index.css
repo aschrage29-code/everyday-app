@@ -59,6 +59,9 @@ html, body {
   max-width: 480px;
   margin: 0 auto;
   max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .modal-header {
@@ -97,6 +100,7 @@ html, body {
   display: flex;
   gap: 8px;
   padding: 1rem 1.25rem 2rem;
+  flex-shrink: 0;
 }
 
 .field label {
