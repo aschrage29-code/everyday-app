@@ -57,10 +57,12 @@ export default function Today() {
     const tasks = data.filter(i =>
       !i.is_habit && !i.is_recurring && i.due_date === dateStr
     )
-    const recurring = data.filter(i =>
-      !i.is_habit && i.is_recurring &&
-      i.recurrence_days && i.recurrence_days.includes(String(dayNum))
-    )
+    const recurring = data.filter(i => {
+  if (i.is_habit || !i.is_recurring) return false
+  if (!i.recurrence_days || !i.recurrence_days.includes(String(dayNum))) return false
+  const createdDateStr = new Date(i.created_at).toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+  return dateStr >= createdDateStr
+})
     const habitItems = data.filter(i => i.is_habit)
 
     setOverdueItems(overdue)
