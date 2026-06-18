@@ -684,3 +684,16 @@ html, body {
   font-size: 10px;
   color: var(--text-secondary);
 }
+
+.habit-card-status {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.habit-card-status.good {
+  color: var(--green);
+}
+
+.habit-card-status.bad {
+  color: var(--red);
+}

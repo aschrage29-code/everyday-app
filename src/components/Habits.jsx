@@ -40,6 +40,17 @@ export default function Habits() {
     return allLogs.filter(log => log.item_id === habitId)
   }
 
+function getGoalStatus(habitId) {
+  const habit = habits.find(h => h.id === habitId)
+  const avg = getAverage(habitId)
+  if (avg === null || !habit.goal_value) return null
+  const avgNum = parseFloat(avg)
+  const isGood = habit.goal_direction === 'up'
+    ? avgNum >= habit.goal_value
+    : avgNum <= habit.goal_value
+  return isGood
+}
+
   function getAverage(habitId) {
     const logs = getHabitLogs(habitId)
     if (logs.length === 0) return null
@@ -116,6 +127,11 @@ export default function Habits() {
               </div>
             )}
             <div className="habit-card-bottom">
+              {getGoalStatus(habit.id) !== null && (
+                <span className={`habit-card-status ${getGoalStatus(habit.id) ? 'good' : 'bad'}`}>
+                  {getGoalStatus(habit.id) ? '✓' : '✗'}
+                </span>
+              )}
               <span className="habit-card-streak">🔥 {getStreak(habit)}</span>
               {renderSparkline(habit.id)}
             </div>
