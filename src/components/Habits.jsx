@@ -48,7 +48,10 @@ function getGoalStatus(habitId) {
   const isGood = habit.goal_direction === 'up'
     ? avgNum >= habit.goal_value
     : avgNum <= habit.goal_value
-  return isGood
+  const diff = habit.goal_direction === 'up'
+    ? avgNum - habit.goal_value
+    : habit.goal_value - avgNum
+  return { isGood, diff: diff.toFixed(1) }
 }
 
   function getAverage(habitId) {
@@ -126,10 +129,10 @@ function getGoalStatus(habitId) {
                 Goal: {habit.goal_value} {habit.goal_unit}
               </div>
             )}
-            <div className="habit-card-bottom">
+           <div className="habit-card-bottom">
               {getGoalStatus(habit.id) !== null && (
-                <span className={`habit-card-status ${getGoalStatus(habit.id) ? 'good' : 'bad'}`}>
-                  {getGoalStatus(habit.id) ? '✓' : '✗'}
+                <span className={`habit-card-status ${getGoalStatus(habit.id).isGood ? 'good' : 'bad'}`}>
+                  {getGoalStatus(habit.id).isGood ? '✓' : '✗'} {getGoalStatus(habit.id).diff > 0 ? '+' : ''}{getGoalStatus(habit.id).diff}
                 </span>
               )}
               <span className="habit-card-streak">🔥 {getStreak(habit)}</span>
