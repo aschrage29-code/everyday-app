@@ -161,12 +161,8 @@ export default function HabitDetail({ habit, onClose }) {
               maxTicksLimit: 4,
             },
             grid: {
-              color: (ctx) => {
-                if (ctx.tick.value === goalValue) return 'rgba(91,141,239,0.5)'
-                return 'rgba(255,255,255,0.04)'
-              },
-              lineWidth: (ctx) => ctx.tick.value === goalValue ? 1.5 : 1,
-            },
+  color: 'rgba(255,255,255,0.04)',
+},
             border: { display: false }
           }
         }
@@ -267,7 +263,7 @@ export default function HabitDetail({ habit, onClose }) {
 
           <div className="trend-section">
             <div className="trend-label">30-day trend</div>
-            <div style={{ position: 'relative', height: '120px' }}>
+            <div style={{ position: 'relative', height: '160px' }}>
               <canvas ref={chartRef} />
             </div>
             <div className="trend-dates">
