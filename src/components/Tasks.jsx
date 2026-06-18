@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import NewItemModal from './NewItemModal'
 
 export default function Tasks() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const [editingItem, setEditingItem] = useState(null)
 
   useEffect(() => {
     fetchItems()
@@ -37,20 +39,28 @@ export default function Tasks() {
         <p style={{ color: 'var(--text-secondary)' }}>No tasks yet. Tap + to add one.</p>
       )}
       {items.map(item => (
-        <div key={item.id} className={`task-card ${item.completed ? 'completed' : ''}`}>
-          <div className="task-check" onClick={() => toggleComplete(item)}>
-            {item.completed ? '✓' : ''}
-          </div>
-          <div className="task-content">
-            <div className="task-title">{item.title}</div>
-            <div className="task-meta">
-              <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
-              {item.is_recurring && <span className="task-badge">🔁 {item.recurrence}</span>}
-              {item.due_date && <span className="task-badge">📅 {item.due_date}</span>}
-            </div>
-          </div>
-        </div>
-      ))}
+  <div key={item.id} className={`task-card ${item.completed ? 'completed' : ''}`}>
+    <div className="task-check" onClick={() => toggleComplete(item)}>
+      {item.completed ? '✓' : ''}
+    </div>
+    <div className="task-content" onClick={() => setEditingItem(item)}>
+      <div className="task-title">{item.title}</div>
+      <div className="task-meta">
+        <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
+        {item.is_recurring && <span className="task-badge">🔁 {item.recurrence}</span>}
+        {item.due_date && <span className="task-badge">📅 {item.due_date}</span>}
+      </div>
+    </div>
+  </div>
+))}
+
+      {editingItem && (
+        <NewItemModal
+          editItem={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSaved={() => { setEditingItem(null); fetchItems() }}
+        />
+      )}
     </div>
   )
 }

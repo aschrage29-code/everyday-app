@@ -1,18 +1,18 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-export default function NewItemModal({ onClose, onSaved }) {
-  const [title, setTitle] = useState('')
-  const [tag, setTag] = useState('personal')
-  const [isRecurring, setIsRecurring] = useState(false)
-  const [isHabit, setIsHabit] = useState(false)
-  const [recurrence, setRecurrence] = useState('daily')
-  const [selectedDays, setSelectedDays] = useState([])
-  const [goalValue, setGoalValue] = useState('')
-  const [goalUnit, setGoalUnit] = useState('')
-  const [goalDirection, setGoalDirection] = useState('up')
-  const [goalCadence, setGoalCadence] = useState('daily')
-  const [dueDate, setDueDate] = useState('')
+export default function NewItemModal({ onClose, onSaved, editItem }) {
+  const [title, setTitle] = useState(editItem?.title || '')
+  const [tag, setTag] = useState(editItem?.tag || 'personal')
+  const [isRecurring, setIsRecurring] = useState(editItem?.is_recurring || false)
+  const [isHabit, setIsHabit] = useState(editItem?.is_habit || false)
+  const [recurrence, setRecurrence] = useState(editItem?.recurrence || 'daily')
+  const [selectedDays, setSelectedDays] = useState(editItem?.recurrence_days?.map(Number) || [])
+  const [goalValue, setGoalValue] = useState(editItem?.goal_value || '')
+  const [goalUnit, setGoalUnit] = useState(editItem?.goal_unit || '')
+  const [goalDirection, setGoalDirection] = useState(editItem?.goal_direction || 'up')
+  const [goalCadence, setGoalCadence] = useState(editItem?.goal_cadence || 'daily')
+  const [dueDate, setDueDate] = useState(editItem?.due_date || '')
   const [saving, setSaving] = useState(false)
 
   function toggleDay(i) {
@@ -21,40 +21,44 @@ export default function NewItemModal({ onClose, onSaved }) {
   )
 }
   async function handleSave() {
-    if (!title.trim()) return
-    setSaving(true)
+  if (!title.trim()) return
+  setSaving(true)
 
-    const { error } = await supabase.from('items').insert({
-      title: title.trim(),
-      tag,
-      type: isHabit ? 'habit' : 'task',
-      is_recurring: isHabit ? true : isRecurring,
-      recurrence: isRecurring || isHabit ? 'custom' : null,
-recurrence_days: isRecurring || isHabit ? selectedDays : null,
-      is_habit: isHabit,
-      goal_value: isHabit && goalValue ? parseFloat(goalValue) : null,
-      goal_unit: isHabit ? goalUnit : null,
-      goal_direction: isHabit ? goalDirection : null,
-      goal_cadence: isHabit ? goalCadence : null,
-      due_date: !isRecurring && !isHabit && dueDate ? dueDate : null,
-    })
-
-    setSaving(false)
-    if (!error) {
-      onSaved()
-      onClose()
-    } else {
-      alert('Error saving: ' + error.message)
-    }
+  const payload = {
+    title: title.trim(),
+    tag,
+    type: isHabit ? 'habit' : 'task',
+    is_recurring: isHabit ? true : isRecurring,
+    recurrence: isRecurring || isHabit ? 'custom' : null,
+    recurrence_days: isRecurring || isHabit ? selectedDays.map(String) : null,
+    is_habit: isHabit,
+    goal_value: isHabit && goalValue ? parseFloat(goalValue) : null,
+    goal_unit: isHabit ? goalUnit : null,
+    goal_direction: isHabit ? goalDirection : null,
+    goal_cadence: isHabit ? goalCadence : null,
+    due_date: !isRecurring && !isHabit && dueDate ? dueDate : null,
   }
+
+  const { error } = editItem
+    ? await supabase.from('items').update(payload).eq('id', editItem.id)
+    : await supabase.from('items').insert(payload)
+
+  setSaving(false)
+  if (!error) {
+    onSaved()
+    onClose()
+  } else {
+    alert('Error saving: ' + error.message)
+  }
+}
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>New Item</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
-        </div>
+  <h2>{editItem ? 'Edit Item' : 'New Item'}</h2>
+  <button className="modal-close" onClick={onClose}>✕</button>
+</div>
 
         <div className="modal-body">
           <div className="field">

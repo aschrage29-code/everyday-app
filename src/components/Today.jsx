@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import HabitLogModal from './HabitLogModal'
+import NewItemModal from './NewItemModal'
 
 export default function Today() {
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -10,6 +11,7 @@ export default function Today() {
   const [habits, setHabits] = useState([])
   const [habitLogs, setHabitLogs] = useState({})
   const [activeHabit, setActiveHabit] = useState(null)
+const [editingItem, setEditingItem] = useState(null)
   const [loading, setLoading] = useState(true)
 
   const dateStr = selectedDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
@@ -107,59 +109,59 @@ export default function Today() {
       )}
 
       {overdueItems.length > 0 && (
-        <section className="today-section">
-          <h3 style={{ color: 'var(--red)' }}>Overdue</h3>
-          {overdueItems.map(item => (
-            <div key={item.id} className="task-card">
-              <div className="task-check" onClick={() => toggleComplete(item)} />
-              <div className="task-content">
-                <div className="task-title">{item.title}</div>
-                <div className="task-meta">
-                  <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
-                  <span className="task-badge" style={{ color: 'var(--red)' }}>Due {item.due_date}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </section>
-      )}
+  <section className="today-section">
+    <h3 style={{ color: 'var(--red)' }}>Overdue</h3>
+    {overdueItems.map(item => (
+      <div key={item.id} className="task-card">
+        <div className="task-check" onClick={() => toggleComplete(item)} />
+        <div className="task-content" onClick={() => setEditingItem(item)}>
+          <div className="task-title">{item.title}</div>
+          <div className="task-meta">
+            <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
+            <span className="task-badge" style={{ color: 'var(--red)' }}>Due {item.due_date}</span>
+          </div>
+        </div>
+      </div>
+    ))}
+  </section>
+)}
 
       {dateItems.length > 0 && (
-        <section className="today-section">
-          <h3>Due</h3>
-          {dateItems.map(item => (
-            <div key={item.id} className={`task-card ${item.completed ? 'completed' : ''}`}>
-              <div className="task-check" onClick={() => toggleComplete(item)}>
-                {item.completed ? '✓' : ''}
-              </div>
-              <div className="task-content">
-                <div className="task-title">{item.title}</div>
-                <div className="task-meta">
-                  <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </section>
-      )}
+  <section className="today-section">
+    <h3>Due</h3>
+    {dateItems.map(item => (
+      <div key={item.id} className={`task-card ${item.completed ? 'completed' : ''}`}>
+        <div className="task-check" onClick={() => toggleComplete(item)}>
+          {item.completed ? '✓' : ''}
+        </div>
+        <div className="task-content" onClick={() => setEditingItem(item)}>
+          <div className="task-title">{item.title}</div>
+          <div className="task-meta">
+            <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
+          </div>
+        </div>
+      </div>
+    ))}
+  </section>
+)}
 
       {recurringItems.length > 0 && (
-        <section className="today-section">
-          <h3>Recurring</h3>
-          {recurringItems.map(item => (
-            <div key={item.id} className="task-card">
-              <div className="task-check" onClick={() => toggleComplete(item)} />
-              <div className="task-content">
-                <div className="task-title">{item.title}</div>
-                <div className="task-meta">
-                  <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
-                  <span className="task-badge">🔁</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </section>
-      )}
+  <section className="today-section">
+    <h3>Recurring</h3>
+    {recurringItems.map(item => (
+      <div key={item.id} className="task-card">
+        <div className="task-check" onClick={() => toggleComplete(item)} />
+        <div className="task-content" onClick={() => setEditingItem(item)}>
+          <div className="task-title">{item.title}</div>
+          <div className="task-meta">
+            <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
+            <span className="task-badge">🔁</span>
+          </div>
+        </div>
+      </div>
+    ))}
+  </section>
+)}
 
       {habits.length > 0 && (
         <section className="today-section">
@@ -196,6 +198,14 @@ export default function Today() {
     logDate={dateStr}
     onClose={() => setActiveHabit(null)}
     onSaved={() => { setActiveHabit(null); fetchAll() }}
+  />
+)}
+
+{editingItem && (
+  <NewItemModal
+    editItem={editingItem}
+    onClose={() => setEditingItem(null)}
+    onSaved={() => { setEditingItem(null); fetchAll() }}
   />
 )}
     </div>
