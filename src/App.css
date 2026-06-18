@@ -84,3 +84,8 @@
   display: block;
   margin-top: -4px;
 }
+
+.app-header-title {
+  min-width: 0;
+  overflow: hidden;
+}

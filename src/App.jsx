@@ -17,7 +17,7 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-  <div>
+  <div className="app-header-title">
     <h1>Everyday</h1>
     <span className="app-version">{__BUILD_TIME__}</span>
   </div>
