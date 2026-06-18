@@ -1,9 +1,10 @@
 .app {
   max-width: 480px;
   margin: 0 auto;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .app-header {
@@ -21,6 +22,7 @@
   flex: 1;
   padding: 1rem 1.25rem;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .app-nav {
