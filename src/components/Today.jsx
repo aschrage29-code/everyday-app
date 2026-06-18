@@ -8,10 +8,11 @@ export default function Today() {
   const [dateItems, setDateItems] = useState([])
   const [overdueItems, setOverdueItems] = useState([])
   const [recurringItems, setRecurringItems] = useState([])
+  const [recurringCompletions, setRecurringCompletions] = useState({})
   const [habits, setHabits] = useState([])
   const [habitLogs, setHabitLogs] = useState({})
   const [activeHabit, setActiveHabit] = useState(null)
-const [editingItem, setEditingItem] = useState(null)
+  const [editingItem, setEditingItem] = useState(null)
   const [loading, setLoading] = useState(true)
 
   const dateStr = selectedDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
@@ -45,36 +46,78 @@ const [editingItem, setEditingItem] = useState(null)
       .from('items')
       .select('*')
 
-    if (!error) {
-      const overdue = data.filter(i =>
-        !i.is_habit && !i.is_recurring && i.due_date && i.due_date < dateStr && !i.completed
-      )
-      const tasks = data.filter(i =>
-        !i.is_habit && !i.is_recurring && i.due_date === dateStr
-      )
-      const recurring = data.filter(i =>
-        !i.is_habit && i.is_recurring &&
-        i.recurrence_days && i.recurrence_days.includes(String(dayNum))
-      )
-      const habitItems = data.filter(i => i.is_habit)
-
-      setOverdueItems(overdue)
-      setDateItems(tasks)
-      setRecurringItems(recurring)
-      setHabits(habitItems)
-
-      const { data: logData, error: logError } = await supabase
-        .from('habit_logs')
-        .select('*')
-        .eq('date', dateStr)
-
-      if (!logError) {
-        const logMap = {}
-        logData.forEach(log => { logMap[log.item_id] = log.value })
-        setHabitLogs(logMap)
-      }
+    if (error || !data) {
+      setLoading(false)
+      return
     }
+
+    const overdue = data.filter(i =>
+      !i.is_habit && !i.is_recurring && i.due_date && i.due_date < dateStr && !i.completed
+    )
+    const tasks = data.filter(i =>
+      !i.is_habit && !i.is_recurring && i.due_date === dateStr
+    )
+    const recurring = data.filter(i =>
+      !i.is_habit && i.is_recurring &&
+      i.recurrence_days && i.recurrence_days.includes(String(dayNum))
+    )
+    const habitItems = data.filter(i => i.is_habit)
+
+    setOverdueItems(overdue)
+    setDateItems(tasks)
+    setRecurringItems(recurring)
+    setHabits(habitItems)
+
+    const { data: completionData, error: completionError } = await supabase
+      .from('recurring_completions')
+      .select('*')
+      .eq('date', dateStr)
+
+    if (!completionError && completionData) {
+      const completionMap = {}
+      completionData.forEach(c => { completionMap[c.item_id] = c.completed })
+      setRecurringCompletions(completionMap)
+    }
+
+    const { data: logData, error: logError } = await supabase
+      .from('habit_logs')
+      .select('*')
+      .eq('date', dateStr)
+
+    if (!logError && logData) {
+      const logMap = {}
+      logData.forEach(log => { logMap[log.item_id] = log.value })
+      setHabitLogs(logMap)
+    }
+
     setLoading(false)
+  }
+
+  async function toggleRecurringComplete(item) {
+    const isCompleted = recurringCompletions[item.id] || false
+
+    const { data: existing } = await supabase
+      .from('recurring_completions')
+      .select('id')
+      .eq('item_id', item.id)
+      .eq('date', dateStr)
+      .maybeSingle()
+
+    let error
+    if (existing) {
+      const { error: updateError } = await supabase
+        .from('recurring_completions')
+        .update({ completed: !isCompleted })
+        .eq('id', existing.id)
+      error = updateError
+    } else {
+      const { error: insertError } = await supabase
+        .from('recurring_completions')
+        .insert({ item_id: item.id, date: dateStr, completed: true })
+      error = insertError
+    }
+
+    if (!error) fetchAll()
   }
 
   async function toggleComplete(item) {
@@ -93,75 +136,77 @@ const [editingItem, setEditingItem] = useState(null)
   return (
     <div className="today">
       <div className="date-nav">
-  <button onClick={() => changeDate(-1)}>‹</button>
-  <span className="date-nav-label">
-    {isToday ? 'Today' : selectedDate.toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric' })}
-  </span>
-  <button onClick={() => changeDate(1)}>›</button>
-  <button
-  className={`jump-today-btn-inline ${isToday ? 'disabled' : ''}`}
-  onClick={() => setSelectedDate(new Date())}
->↻</button>
-</div>
+        <button onClick={() => changeDate(-1)}>‹</button>
+        <span className="date-nav-label">
+          {isToday ? 'Today' : selectedDate.toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric' })}
+        </span>
+        <button onClick={() => changeDate(1)}>›</button>
+        <button
+          className={`jump-today-btn-inline ${isToday ? 'disabled' : ''}`}
+          onClick={() => setSelectedDate(new Date())}
+        >↻</button>
+      </div>
 
       {hasNothing && (
         <p style={{ color: 'var(--text-secondary)' }}>Nothing for this day.</p>
       )}
 
       {overdueItems.length > 0 && (
-  <section className="today-section">
-    <h3 style={{ color: 'var(--red)' }}>Overdue</h3>
-    {overdueItems.map(item => (
-      <div key={item.id} className="task-card">
-        <div className="task-check" onClick={() => toggleComplete(item)} />
-        <div className="task-content" onClick={() => setEditingItem(item)}>
-          <div className="task-title">{item.title}</div>
-          <div className="task-meta">
-            <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
-            <span className="task-badge" style={{ color: 'var(--red)' }}>Due {item.due_date}</span>
-          </div>
-        </div>
-      </div>
-    ))}
-  </section>
-)}
+        <section className="today-section">
+          <h3 style={{ color: 'var(--red)' }}>Overdue</h3>
+          {overdueItems.map(item => (
+            <div key={item.id} className="task-card">
+              <div className="task-check" onClick={() => toggleComplete(item)} />
+              <div className="task-content" onClick={() => setEditingItem(item)}>
+                <div className="task-title">{item.title}</div>
+                <div className="task-meta">
+                  <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
+                  <span className="task-badge" style={{ color: 'var(--red)' }}>Due {item.due_date}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
 
       {dateItems.length > 0 && (
-  <section className="today-section">
-    <h3>Due</h3>
-    {dateItems.map(item => (
-      <div key={item.id} className={`task-card ${item.completed ? 'completed' : ''}`}>
-        <div className="task-check" onClick={() => toggleComplete(item)}>
-          {item.completed ? '✓' : ''}
-        </div>
-        <div className="task-content" onClick={() => setEditingItem(item)}>
-          <div className="task-title">{item.title}</div>
-          <div className="task-meta">
-            <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
-          </div>
-        </div>
-      </div>
-    ))}
-  </section>
-)}
+        <section className="today-section">
+          <h3>Due</h3>
+          {dateItems.map(item => (
+            <div key={item.id} className={`task-card ${item.completed ? 'completed' : ''}`}>
+              <div className="task-check" onClick={() => toggleComplete(item)}>
+                {item.completed ? '✓' : ''}
+              </div>
+              <div className="task-content" onClick={() => setEditingItem(item)}>
+                <div className="task-title">{item.title}</div>
+                <div className="task-meta">
+                  <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
 
       {recurringItems.length > 0 && (
-  <section className="today-section">
-    <h3>Recurring</h3>
-    {recurringItems.map(item => (
-      <div key={item.id} className="task-card">
-        <div className="task-check" onClick={() => toggleComplete(item)} />
-        <div className="task-content" onClick={() => setEditingItem(item)}>
-          <div className="task-title">{item.title}</div>
-          <div className="task-meta">
-            <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
-            <span className="task-badge">🔁</span>
-          </div>
-        </div>
-      </div>
-    ))}
-  </section>
-)}
+        <section className="today-section">
+          <h3>Recurring</h3>
+          {recurringItems.map(item => (
+            <div key={item.id} className={`task-card ${recurringCompletions[item.id] ? 'completed' : ''}`}>
+              <div className="task-check" onClick={() => toggleRecurringComplete(item)}>
+                {recurringCompletions[item.id] ? '✓' : ''}
+              </div>
+              <div className="task-content" onClick={() => setEditingItem(item)}>
+                <div className="task-title">{item.title}</div>
+                <div className="task-meta">
+                  <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
+                  <span className="task-badge">🔁</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
 
       {habits.length > 0 && (
         <section className="today-section">
@@ -192,22 +237,22 @@ const [editingItem, setEditingItem] = useState(null)
       )}
 
       {activeHabit && (
-  <HabitLogModal
-    habit={activeHabit}
-    existingValue={habitLogs[activeHabit.id]}
-    logDate={dateStr}
-    onClose={() => setActiveHabit(null)}
-    onSaved={() => { setActiveHabit(null); fetchAll() }}
-  />
-)}
+        <HabitLogModal
+          habit={activeHabit}
+          existingValue={habitLogs[activeHabit.id]}
+          logDate={dateStr}
+          onClose={() => setActiveHabit(null)}
+          onSaved={() => { setActiveHabit(null); fetchAll() }}
+        />
+      )}
 
-{editingItem && (
-  <NewItemModal
-    editItem={editingItem}
-    onClose={() => setEditingItem(null)}
-    onSaved={() => { setEditingItem(null); fetchAll() }}
-  />
-)}
+      {editingItem && (
+        <NewItemModal
+          editItem={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSaved={() => { setEditingItem(null); fetchAll() }}
+        />
+      )}
     </div>
   )
 }
