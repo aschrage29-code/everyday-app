@@ -322,6 +322,7 @@ html, body {
 .day-picker {
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .day-btn {
