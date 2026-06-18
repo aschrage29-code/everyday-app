@@ -51,9 +51,12 @@ export default function Today() {
       return
     }
 
-    const overdue = data.filter(i =>
-      !i.is_habit && !i.is_recurring && i.due_date && i.due_date < dateStr && !i.completed
+    const actualTodayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+const overdue = isToday
+  ? data.filter(i =>
+      !i.is_habit && !i.is_recurring && i.due_date && i.due_date < actualTodayStr && !i.completed
     )
+  : []
     const tasks = data.filter(i =>
       !i.is_habit && !i.is_recurring && i.due_date === dateStr
     )
