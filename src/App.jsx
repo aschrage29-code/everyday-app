@@ -17,9 +17,12 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Everyday</h1>
-        <button className="add-btn" onClick={() => setShowModal(true)}>+</button>
-      </header>
+  <div>
+    <h1>Everyday</h1>
+    <span className="app-version">{__BUILD_TIME__}</span>
+  </div>
+  <button className="add-btn" onClick={() => setShowModal(true)}>+</button>
+</header>
 
       <main className="app-main">
         {activeTab === 'today' && <Today key={refreshKey} />}

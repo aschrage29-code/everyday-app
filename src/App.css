@@ -77,3 +77,10 @@
   justify-content: center;
   line-height: 1;
 }
+
+.app-version {
+  font-size: 11px;
+  color: var(--text-secondary);
+  display: block;
+  margin-top: -4px;
+}
