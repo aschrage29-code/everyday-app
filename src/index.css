@@ -536,3 +536,16 @@ html, body {
   border-radius: 20px;
   max-height: 75vh;
 }
+
+.task-filter {
+  margin-bottom: 0.75rem;
+}
+
+.tag-filter {
+  margin-bottom: 1rem;
+}
+
+.tag-btn.active.tag-all {
+  border-color: var(--accent);
+  color: var(--accent);
+}
