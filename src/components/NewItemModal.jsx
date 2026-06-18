@@ -20,6 +20,42 @@ export default function NewItemModal({ onClose, onSaved, editItem }) {
     prev.includes(i) ? prev.filter(d => d !== i) : [...prev, i]
   )
 }
+
+async function handleRestore() {
+  if (!editItem) return
+  setSaving(true)
+  const { error } = await supabase
+    .from('items')
+    .update({ archived: false })
+    .eq('id', editItem.id)
+
+  setSaving(false)
+  if (!error) {
+    onSaved()
+    onClose()
+  } else {
+    alert('Error restoring: ' + error.message)
+  }
+}
+async function handleArchive() {
+  if (!editItem) return
+  const confirmed = window.confirm(`Delete "${editItem.title}"? You can restore it later from the archive.`)
+  if (!confirmed) return
+
+  setSaving(true)
+  const { error } = await supabase
+    .from('items')
+    .update({ archived: true })
+    .eq('id', editItem.id)
+
+  setSaving(false)
+  if (!error) {
+    onSaved()
+    onClose()
+  } else {
+    alert('Error deleting: ' + error.message)
+  }
+}
   async function handleSave() {
   if (!title.trim()) return
   setSaving(true)
@@ -185,11 +221,21 @@ export default function NewItemModal({ onClose, onSaved, editItem }) {
         </div>
 
         <div className="modal-footer">
-          <button className="btn-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn-primary" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Save'}
-          </button>
-        </div>
+  {editItem && !editItem.archived && (
+    <button className="btn-danger" onClick={handleArchive} disabled={saving}>
+      Delete
+    </button>
+  )}
+  {editItem && editItem.archived && (
+    <button className="btn-danger" onClick={handleRestore} disabled={saving}>
+      Restore
+    </button>
+  )}
+  <button className="btn-secondary" onClick={onClose}>Cancel</button>
+  <button className="btn-primary" onClick={handleSave} disabled={saving}>
+    {saving ? 'Saving...' : 'Save'}
+  </button>
+</div>
       </div>
     </div>
   )

@@ -58,12 +58,12 @@ export default function Habits() {
     cursor.setDate(cursor.getDate() - 1)
 
     for (let log of relevant) {
-  const cursorStr = cursor.toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
-  if (log.date !== cursorStr) break
-  if (log.value <= 0) break
-  streak++
-  cursor.setDate(cursor.getDate() - 1)
-}
+      const cursorStr = cursor.toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+      if (log.date !== cursorStr) break
+      if (habit.goal_direction === 'up' && log.value <= 0) break
+      streak++
+      cursor.setDate(cursor.getDate() - 1)
+    }
 
     return streak
   }

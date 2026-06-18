@@ -41,12 +41,12 @@ export default function HabitDetail({ habit, onClose }) {
     cursor.setDate(cursor.getDate() - 1)
 
     for (let log of relevant) {
-  const cursorStr = cursor.toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
-  if (log.date !== cursorStr) break
-  if (log.value <= 0) break
-  streak++
-  cursor.setDate(cursor.getDate() - 1)
-}
+      const cursorStr = cursor.toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+      if (log.date !== cursorStr) break
+      if (habit.goal_direction === 'up' && log.value <= 0) break
+      streak++
+      cursor.setDate(cursor.getDate() - 1)
+    }
 
     return streak
   }
@@ -58,8 +58,9 @@ export default function HabitDetail({ habit, onClose }) {
   const maxValue = Math.max(...logs.map(l => l.value), habit.goal_value || 0)
 
   return (
-  <div className="modal-overlay detail-overlay" onClick={onClose}>
-    <div className="modal detail-modal" onClick={e => e.stopPropagation()}>        <div className="modal-header">
+    <div className="modal-overlay detail-overlay" onClick={onClose}>
+      <div className="modal detail-modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
           <h2>{habit.title}</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>

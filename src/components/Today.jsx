@@ -3,6 +3,16 @@ import { supabase } from '../lib/supabase'
 import HabitLogModal from './HabitLogModal'
 import NewItemModal from './NewItemModal'
 
+function formatRecurrenceDays(days) {
+  if (!days || days.length === 0) return ''
+  const labels = ['Su', 'M', 'Tu', 'W', 'Th', 'F', 'Sa']
+  return [...days]
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map(d => labels[d])
+    .join(', ')
+}
+
 export default function Today() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [dateItems, setDateItems] = useState([])
@@ -43,29 +53,31 @@ export default function Today() {
   async function fetchAll() {
     setLoading(true)
     const { data, error } = await supabase
-      .from('items')
-      .select('*')
+  .from('items')
+  .select('*')
+  .eq('archived', false)
 
-    if (error || !data) {
-      setLoading(false)
-      return
-    }
+if (error || !data) {
+  setLoading(false)
+  return
+}
 
     const actualTodayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
-const overdue = isToday
-  ? data.filter(i =>
-      !i.is_habit && !i.is_recurring && i.due_date && i.due_date < actualTodayStr && !i.completed
-    )
-  : []
+    const overdue = isToday
+      ? data.filter(i =>
+          !i.is_habit && !i.is_recurring && i.due_date && i.due_date < actualTodayStr && !i.completed
+        )
+      : []
+
     const tasks = data.filter(i =>
       !i.is_habit && !i.is_recurring && i.due_date === dateStr
     )
     const recurring = data.filter(i => {
-  if (i.is_habit || !i.is_recurring) return false
-  if (!i.recurrence_days || !i.recurrence_days.includes(String(dayNum))) return false
-  const createdDateStr = new Date(i.created_at).toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
-  return dateStr >= createdDateStr
-})
+      if (i.is_habit || !i.is_recurring) return false
+      if (!i.recurrence_days || !i.recurrence_days.includes(String(dayNum))) return false
+      const createdDateStr = new Date(i.created_at).toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+      return dateStr >= createdDateStr
+    })
     const habitItems = data.filter(i => i.is_habit)
 
     setOverdueItems(overdue)
@@ -205,7 +217,7 @@ const overdue = isToday
                 <div className="task-title">{item.title}</div>
                 <div className="task-meta">
                   <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
-                  <span className="task-badge">🔁</span>
+                  <span className="task-badge">🔁 {formatRecurrenceDays(item.recurrence_days)}</span>
                 </div>
               </div>
             </div>

@@ -2,35 +2,46 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import NewItemModal from './NewItemModal'
 
+function formatRecurrenceDays(days) {
+  if (!days || days.length === 0) return ''
+  const labels = ['Su', 'M', 'Tu', 'W', 'Th', 'F', 'Sa']
+  return [...days]
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map(d => labels[d])
+    .join(', ')
+}
+
 export default function Tasks() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const [editingItem, setEditingItem] = useState(null)
   const [filter, setFilter] = useState('upcoming')
   const [tagFilter, setTagFilter] = useState('all')
-  const [editingItem, setEditingItem] = useState(null)
 
   useEffect(() => {
-    fetchItems()
-  }, [])
+  fetchItems()
+}, [filter])
 
   async function fetchItems() {
   const { data, error } = await supabase
     .from('items')
     .select('*')
     .eq('is_habit', false)
+    .eq('archived', filter === 'archived')
 
-  if (!error) {
-    const sorted = [...data].sort((a, b) => {
-      if (a.completed !== b.completed) return a.completed ? 1 : -1
-      if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date)
-      if (a.due_date) return -1
-      if (b.due_date) return 1
-      return b.created_at.localeCompare(a.created_at)
-    })
-    setItems(sorted)
+    if (!error) {
+      const sorted = [...data].sort((a, b) => {
+        if (a.completed !== b.completed) return a.completed ? 1 : -1
+        if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date)
+        if (a.due_date) return -1
+        if (b.due_date) return 1
+        return b.created_at.localeCompare(a.created_at)
+      })
+      setItems(sorted)
+    }
+    setLoading(false)
   }
-  setLoading(false)
-}
 
   async function toggleComplete(item) {
     const { error } = await supabase
@@ -43,57 +54,62 @@ export default function Tasks() {
 
   if (loading) return <p style={{ color: 'var(--text-secondary)' }}>Loading...</p>
 
- const filteredItems = items.filter(item => {
-  const statusMatch = filter === 'upcoming' ? !item.completed : item.completed
+  const filteredItems = items.filter(item => {
   const tagMatch = tagFilter === 'all' || item.tag === tagFilter
+  if (filter === 'archived') return tagMatch
+  const statusMatch = filter === 'upcoming' ? !item.completed : item.completed
   return statusMatch && tagMatch
 })
 
-return (
-  <div className="tasks">
-    <div className="seg-control task-filter">
-      <button
-        className={filter === 'upcoming' ? 'active' : ''}
-        onClick={() => setFilter('upcoming')}
-      >Upcoming</button>
-      <button
-        className={filter === 'completed' ? 'active' : ''}
-        onClick={() => setFilter('completed')}
-      >Completed</button>
-    </div>
+  return (
+    <div className="tasks">
+      <div className="seg-control task-filter">
+  <button
+    className={filter === 'upcoming' ? 'active' : ''}
+    onClick={() => setFilter('upcoming')}
+  >Upcoming</button>
+  <button
+    className={filter === 'completed' ? 'active' : ''}
+    onClick={() => setFilter('completed')}
+  >Completed</button>
+  <button
+    className={filter === 'archived' ? 'active' : ''}
+    onClick={() => setFilter('archived')}
+  >Archived</button>
+</div>
 
-    <div className="tag-picker tag-filter">
-      {['all', 'personal', 'work', 'other'].map(t => (
-        <button
-          key={t}
-          className={`tag-btn tag-${t} ${tagFilter === t ? 'active' : ''}`}
-          onClick={() => setTagFilter(t)}
-        >
-          {t}
-        </button>
-      ))}
-    </div>
-
-    {filteredItems.length === 0 && (
-      <p style={{ color: 'var(--text-secondary)' }}>
-        {filter === 'upcoming' ? 'No upcoming tasks.' : 'No completed tasks yet.'}
-      </p>
-    )}
-    {filteredItems.map(item => (
-  <div key={item.id} className={`task-card ${item.completed ? 'completed' : ''}`}>
-    <div className="task-check" onClick={() => toggleComplete(item)}>
-      {item.completed ? '✓' : ''}
-    </div>
-    <div className="task-content" onClick={() => setEditingItem(item)}>
-      <div className="task-title">{item.title}</div>
-      <div className="task-meta">
-        <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
-        {item.is_recurring && <span className="task-badge">🔁 {item.recurrence}</span>}
-        {item.due_date && <span className="task-badge">📅 {item.due_date}</span>}
+      <div className="tag-picker tag-filter">
+        {['all', 'personal', 'work', 'other'].map(t => (
+          <button
+            key={t}
+            className={`tag-btn tag-${t} ${tagFilter === t ? 'active' : ''}`}
+            onClick={() => setTagFilter(t)}
+          >
+            {t}
+          </button>
+        ))}
       </div>
-    </div>
-  </div>
-))}
+
+      {filteredItems.length === 0 && (
+        <p style={{ color: 'var(--text-secondary)' }}>
+          {filter === 'upcoming' ? 'No upcoming tasks.' : 'No completed tasks yet.'}
+        </p>
+      )}
+      {filteredItems.map(item => (
+        <div key={item.id} className={`task-card ${item.completed ? 'completed' : ''}`}>
+          <div className="task-check" onClick={() => toggleComplete(item)}>
+            {item.completed ? '✓' : ''}
+          </div>
+          <div className="task-content" onClick={() => setEditingItem(item)}>
+            <div className="task-title">{item.title}</div>
+            <div className="task-meta">
+              <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
+              {item.is_recurring && <span className="task-badge">🔁 {formatRecurrenceDays(item.recurrence_days)}</span>}
+              {item.due_date && <span className="task-badge">📅 {item.due_date}</span>}
+            </div>
+          </div>
+        </div>
+      ))}
 
       {editingItem && (
         <NewItemModal
