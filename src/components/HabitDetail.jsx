@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
-export default function HabitDetail({ habit, onClose }) {
+export default function HabitDetail({ habit, onClose, onEdit }) {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [calendarDate, setCalendarDate] = useState(() => {
@@ -239,9 +239,12 @@ export default function HabitDetail({ habit, onClose }) {
   return (
     <div className="modal-overlay detail-overlay" onClick={onClose}>
       <div className="modal detail-modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
+       <div className="modal-header">
           <h2>{habit.title}</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <div className="modal-header-actions">
+            <button className="modal-edit" onClick={() => onEdit(habit)}>Edit</button>
+            <button className="modal-close" onClick={onClose}>✕</button>
+          </div>
         </div>
         <div className="modal-body">
           <div className="detail-stats">
