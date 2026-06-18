@@ -58,9 +58,8 @@ export default function HabitDetail({ habit, onClose }) {
   const maxValue = Math.max(...logs.map(l => l.value), habit.goal_value || 0)
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
+  <div className="modal-overlay detail-overlay" onClick={onClose}>
+    <div className="modal detail-modal" onClick={e => e.stopPropagation()}>        <div className="modal-header">
           <h2>{habit.title}</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
