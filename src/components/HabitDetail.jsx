@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
 export default function HabitDetail({ habit, onClose }) {
@@ -8,16 +8,28 @@ export default function HabitDetail({ habit, onClose }) {
     const now = new Date()
     return { year: now.getFullYear(), month: now.getMonth() }
   })
+  const chartRef = useRef(null)
+  const chartInstanceRef = useRef(null)
 
   useEffect(() => {
     fetchLogs()
   }, [calendarDate])
 
+  useEffect(() => {
+    if (!loading && recentLogs.length > 0) {
+      renderChart()
+    }
+    return () => {
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy()
+        chartInstanceRef.current = null
+      }
+    }
+  }, [logs, loading])
+
   async function fetchLogs() {
     setLoading(true)
     const { year, month } = calendarDate
-
-    // Fetch from 30 days ago OR start of calendar month, whichever is earlier
     const startOfMonth = new Date(year, month, 1)
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -62,19 +74,117 @@ export default function HabitDetail({ habit, onClose }) {
     return streak
   }
 
+  function buildChartData() {
+    const thirtyDaysAgoStr = new Date(Date.now() - 30 * 864e5)
+      .toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+
+    const logMap = {}
+    logs.forEach(l => { logMap[l.date] = l.value })
+
+    const dates = []
+    const values = []
+    const cursor = new Date(Date.now() - 30 * 864e5)
+
+    for (let i = 0; i <= 30; i++) {
+      const dateStr = cursor.toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+      if (dateStr <= todayStr) {
+        dates.push(dateStr)
+        values.push(logMap[dateStr] !== undefined ? logMap[dateStr] : null)
+      }
+      cursor.setDate(cursor.getDate() + 1)
+    }
+
+    return { dates, values }
+  }
+
+  function renderChart() {
+    if (!chartRef.current) return
+    if (chartInstanceRef.current) {
+      chartInstanceRef.current.destroy()
+      chartInstanceRef.current = null
+    }
+
+    const { dates, values } = buildChartData()
+    const goalValue = habit.goal_value || 0
+
+    const colors = values.map(v => {
+      if (v === null) return '#2a2a2a'
+      const isGood = habit.goal_direction === 'up' ? v >= goalValue : v <= goalValue
+      return isGood ? '#4caf7d' : '#e05c5c'
+    })
+
+    const maxVal = Math.max(...values.filter(v => v !== null), goalValue, 1)
+
+    const formatDate = (dateStr) => {
+      const d = new Date(dateStr + 'T00:00:00')
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    }
+
+    chartInstanceRef.current = new window.Chart(chartRef.current, {
+      type: 'bar',
+      data: {
+        labels: dates,
+        datasets: [{
+          data: values.map(v => v === null ? 1 : v),
+          backgroundColor: colors,
+          borderColor: colors,
+          borderWidth: 0,
+          borderRadius: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (items) => formatDate(dates[items[0].dataIndex]),
+              label: (ctx) => {
+                const raw = values[ctx.dataIndex]
+                if (raw === null) return 'No log'
+                return `${raw} ${habit.goal_unit || ''}`
+              }
+            }
+          }
+        },
+        scales: {
+          x: { display: false },
+          y: {
+            display: true,
+            min: 0,
+            max: Math.ceil(maxVal * 1.1),
+            ticks: {
+              color: '#888888',
+              font: { size: 10 },
+              maxTicksLimit: 4,
+            },
+            grid: {
+              color: (ctx) => {
+                if (ctx.tick.value === goalValue) return 'rgba(91,141,239,0.5)'
+                return 'rgba(255,255,255,0.04)'
+              },
+              lineWidth: (ctx) => ctx.tick.value === goalValue ? 1.5 : 1,
+            },
+            border: { display: false }
+          }
+        }
+      }
+    })
+  }
+
   function renderCalendar() {
     const { year, month } = calendarDate
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
     const logMap = {}
     logs.forEach(l => { logMap[l.date] = l.value })
 
-    const firstDay = new Date(year, month, 1).getDay() // 0=Sun
+    const firstDay = new Date(year, month, 1).getDay()
     const daysInMonth = new Date(year, month + 1, 0).getDate()
     const monthName = new Date(year, month, 1).toLocaleString('en-US', { month: 'long' })
 
     const cells = []
-
-    // Empty cells for offset
     for (let i = 0; i < firstDay; i++) {
       cells.push(<div key={`empty-${i}`} className="cal-day empty" />)
     }
@@ -124,11 +234,11 @@ export default function HabitDetail({ habit, onClose }) {
     )
   }
 
+  const thirtyDaysAgoStr = new Date(Date.now() - 30 * 864e5)
+    .toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+  const recentLogs = logs.filter(l => l.date >= thirtyDaysAgoStr)
   const average = getAverage()
   const streak = getStreak()
-  const thirtyDaysAgoStr = new Date(Date.now() - 30 * 864e5).toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
-  const recentLogs = logs.filter(l => l.date >= thirtyDaysAgoStr)
-  const maxValue = Math.max(...recentLogs.map(l => l.value), habit.goal_value || 0)
 
   return (
     <div className="modal-overlay detail-overlay" onClick={onClose}>
@@ -155,24 +265,17 @@ export default function HabitDetail({ habit, onClose }) {
 
           {renderCalendar()}
 
-          {recentLogs.length > 0 && (
-            <div className="sparkline">
-              {recentLogs.map((log, i) => {
-                const heightPct = maxValue > 0 ? (log.value / maxValue) * 100 : 0
-                const isGood = habit.goal_direction === 'up'
-                  ? log.value >= habit.goal_value
-                  : log.value <= habit.goal_value
-                return (
-                  <div
-                    key={i}
-                    className={`sparkline-bar ${isGood ? 'good' : 'bad'}`}
-                    style={{ height: `${heightPct}%` }}
-                    title={`${log.date}: ${log.value}`}
-                  />
-                )
-              })}
+          <div className="trend-section">
+            <div className="trend-label">30-day trend</div>
+            <div style={{ position: 'relative', height: '120px' }}>
+              <canvas ref={chartRef} />
             </div>
-          )}
+            <div className="trend-dates">
+              <span>{new Date(Date.now() - 30 * 864e5).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+              <span>{new Date(Date.now() - 15 * 864e5).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+              <span>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

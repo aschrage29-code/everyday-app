@@ -653,4 +653,28 @@ html, body {
 .cal-day-val {
   font-size: 9px;
   opacity: 0.85;
+} 
+
+.trend-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trend-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.trend-dates {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+
+.trend-dates span {
+  font-size: 10px;
+  color: var(--text-secondary);
 }
