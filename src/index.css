@@ -59,7 +59,6 @@ html, body {
   max-width: 480px;
   margin: 0 auto;
   max-height: 90vh;
-  overflow-y: auto;
 }
 
 .modal-header {
@@ -67,6 +66,7 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.25rem 0;
+  flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -78,9 +78,10 @@ html, body {
   background: none;
   border: none;
   color: var(--text-secondary);
-  font-size: 18px;
+  font-size: 24px;
   cursor: pointer;
-  padding: 4px;
+  padding: 4px 8px;
+  line-height: 1;
 }
 
 .modal-body {
@@ -88,6 +89,8 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modal-footer {
@@ -551,6 +554,9 @@ html, body {
 .detail-modal {
   border-radius: 20px;
   max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .task-filter {
