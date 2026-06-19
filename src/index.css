@@ -741,5 +741,212 @@ html, body {
   font-size: 14px;
   cursor: pointer;
   padding: 4px 8px;
+} 
+
+.library-add-form {
+  background: var(--bg-elevated);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
+.template-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.template-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.template-title {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.template-notes {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.planner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.planner-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.planner-nav button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px 12px;
+}
+
+.planner-week-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.planner-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.planner-day-row {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.planner-day-row.today {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+
+.planner-day-label {
+  min-width: 44px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.planner-day-name {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.planner-day-num {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.planner-day-num.today {
+  background: var(--accent);
+  color: white;
+  font-size: 15px;
+}
+
+.planner-day-counts {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.planner-count-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.planner-count-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.planner-empty-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.planner-add-hint {
+  font-size: 18px;
+  color: var(--border);
+}
+
+.planner-day-item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.planner-day-item-row.completed .planner-item-title {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.planner-item-title {
+  font-size: 14px;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.library-add-form {
+  background: var(--bg-elevated);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.template-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.template-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.template-title {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.template-notes {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
