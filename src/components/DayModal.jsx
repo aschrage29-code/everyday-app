@@ -45,6 +45,7 @@ export default function DayModal({ dateStr, items, onClose, onSaved }) {
         due_date: dateStr,
         completed: false,
         archived: false,
+        template_category: template.category,
       })
     if (!error) {
       setShowLibrary(false)
@@ -67,7 +68,9 @@ export default function DayModal({ dateStr, items, onClose, onSaved }) {
           )}
           {items.map(item => (
             <div key={item.id} className={`planner-day-item-row ${item.completed ? 'completed' : ''}`}>
-              <span className={`task-tag tag-${item.tag}`}>{item.tag}</span>
+              <span className={`task-tag tag-${item.tag}`}>
+                {item.template_category || item.tag}
+              </span>
               <span className="planner-item-title">{item.title}</span>
             </div>
           ))}

@@ -61,7 +61,7 @@ export default function Planner() {
     return items.filter(item => {
       if (item.due_date !== dateStr) return false
       if (activeFilter === 'all') return true
-      return item.tag === activeFilter
+      return item.tag === activeFilter || item.template_category === activeFilter
     })
   }
 
@@ -69,10 +69,20 @@ export default function Planner() {
     const dayItems = items.filter(i => i.due_date === dateStr)
     const counts = {}
     dayItems.forEach(item => {
-      const key = item.tag || 'other'
+      const key = item.template_category || item.tag || 'other'
       counts[key] = (counts[key] || 0) + 1
     })
     return counts
+  }
+
+  function isCurrentWeek() {
+    const now = new Date()
+    const day = now.getDay()
+    const diff = day === 0 ? -6 : 1 - day
+    const currentWeekStart = new Date(now)
+    currentWeekStart.setDate(now.getDate() + diff)
+    currentWeekStart.setHours(0, 0, 0, 0)
+    return weekStart.getTime() === currentWeekStart.getTime()
   }
 
   function formatWeekRange() {
@@ -108,6 +118,22 @@ export default function Planner() {
           next.setDate(weekStart.getDate() + 7)
           setWeekStart(next)
         }}>›</button>
+        <button
+          className={`jump-today-btn-inline ${isCurrentWeek() ? 'disabled' : ''}`}
+          onClick={() => {
+            if (!isCurrentWeek()) {
+              const now = new Date()
+              const day = now.getDay()
+              const diff = day === 0 ? -6 : 1 - day
+              const start = new Date(now)
+              start.setDate(now.getDate() + diff)
+              start.setHours(0, 0, 0, 0)
+              setWeekStart(start)
+            }
+          }}
+        >
+          ↻
+        </button>
       </div>
 
       <div className="tag-picker" style={{ marginBottom: '4px' }}>
