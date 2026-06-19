@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Today from './components/Today'
 import Tasks from './components/Tasks'
 import Habits from './components/Habits'
+import Planner from './components/Planner'
 import NewItemModal from './components/NewItemModal'
 import './App.css'
 
@@ -17,19 +18,18 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-  <div className="app-header-title">
-    <h1>Everyday</h1>
-    <span className="app-version">{__BUILD_TIME__}</span>
-  </div>
-  <button className="add-btn" onClick={() => setShowModal(true)}>+</button>
-</header>
-
+        <div className="app-header-title">
+          <h1>Everyday</h1>
+          <span className="app-version">{__BUILD_TIME__}</span>
+        </div>
+        <button className="add-btn" onClick={() => setShowModal(true)}>+</button>
+      </header>
       <main className="app-main">
         {activeTab === 'today' && <Today key={refreshKey} />}
         {activeTab === 'tasks' && <Tasks key={refreshKey} />}
         {activeTab === 'habits' && <Habits key={refreshKey} />}
+        {activeTab === 'planner' && <Planner key={refreshKey} />}
       </main>
-
       <nav className="app-nav">
         <button
           className={activeTab === 'today' ? 'active' : ''}
@@ -52,8 +52,14 @@ function App() {
           <span>🔥</span>
           <span>Habits</span>
         </button>
+        <button
+          className={activeTab === 'planner' ? 'active' : ''}
+          onClick={() => setActiveTab('planner')}
+        >
+          <span>🗓</span>
+          <span>Planner</span>
+        </button>
       </nav>
-
       {showModal && (
         <NewItemModal
           onClose={() => setShowModal(false)}
