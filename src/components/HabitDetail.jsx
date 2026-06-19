@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import HabitLogModal from './HabitLogModal'
+
+const [showLogModal, setShowLogModal] = useState(false)
 
 export default function HabitDetail({ habit, onClose, onEdit }) {
   const [logs, setLogs] = useState([])
@@ -262,7 +265,12 @@ export default function HabitDetail({ habit, onClose, onEdit }) {
             </div>
           </div>
 
+          <button className="btn-primary" onClick={() => setShowLogModal(true)}>
+            Log today
+          </button>
+
           {renderCalendar()}
+
 
           <div className="trend-section">
             <div className="trend-label">30-day trend</div>
@@ -277,6 +285,23 @@ export default function HabitDetail({ habit, onClose, onEdit }) {
           </div>
         </div>
       </div>
+
+      {showLogModal && (
+        <HabitLogModal
+          habit={habit}
+          logDate={new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })}
+          existingValue={(() => {
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+            const todayLog = logs.find(l => l.date === todayStr)
+            return todayLog ? todayLog.value : undefined
+          })()}
+          onClose={() => setShowLogModal(false)}
+          onSaved={() => {
+            setShowLogModal(false)
+            fetchLogs()
+          }}
+        />
+      )}
     </div>
   )
 }
