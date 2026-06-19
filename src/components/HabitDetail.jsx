@@ -2,10 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import HabitLogModal from './HabitLogModal'
 
-const [showLogModal, setShowLogModal] = useState(false)
-
 export default function HabitDetail({ habit, onClose, onEdit }) {
   const [logs, setLogs] = useState([])
+  const [showLogModal, setShowLogModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [calendarDate, setCalendarDate] = useState(() => {
     const now = new Date()
